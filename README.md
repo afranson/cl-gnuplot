@@ -18,7 +18,7 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
 (plt:plot "cos(2*x)+3" '(1 2 3) '(4 5 6) :xrange "[*:4]" :yrange "[0:7]" :grid "" :key "bottom left opaque")
 (plt:plot-add '(2 3 4) "w lp title 'added line'")
 
-;;; 3D plottin
+;;; 3D plotting
 (plt:reset)
 (plt:send-plot-options :terminal "qt enhanced font 'arial,32' size 1920,1080")
 (plt:plot "cos(2*x)+sin(2*y)+15 w pm3d")
@@ -45,16 +45,20 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
 ;;; Panicking
 (plt:restart-gnuplot)
 (plt:help-cl-gnuplot)
+
+;;; Useful Utilities
+(plt:plot-function :function (lambda (x) (/ (x + 4)) :x (plt:linspace 0 10 :len 100))
+(plt:linspace 0 10 :step 1 :type 'integer)
+(plt:range 0 -5)
 ```
 
 # Just Let Me Use Gnuplot Syntax Dangit
 ```
 (plt:send-strings (list "set terminal qt enhanced font 'arial,16' size 1920,1080"
                         "plot 'mydata.txt' w lp u 1:2 title 'override'"
-						"set xlabel 'Booyah' font ',300'"))
+	                    "set xlabel 'Booyah' font ',300'"))
 ```
 
 ## License
 
 GPLv3
-
