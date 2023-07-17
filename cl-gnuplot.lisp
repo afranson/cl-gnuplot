@@ -372,7 +372,7 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
 	    (lambda (format-string command)
 	      (format nil
 		      format-string
-		      (sb-unicode:lowercase (symbol-name (car command))) ;; Should be more portable
+		      (string-downcase (symbol-name (car command)))
 		      (cadr command)))
 	    format-strings commands)))
     (apply #'concatenate 'string command-strings)))
@@ -537,19 +537,19 @@ Symbol: :my-symbol
 ;; TODO allow for symbol and string entry (convert symbols like :xrange into "xrange")
 (defun help (topic &optional return-string? (gnuplot-instance *gnuplot*))
   "Prints all the gnuplot help info concerning 'topic'. Set 'return-string?' to t to return the help information as a string."
-  (let* ((query (if (symbolp topic) (sb-unicode:lowercase (symbol-name topic)) topic))
+  (let* ((query (if (symbolp topic) (string-downcase (symbol-name topic)) topic))
 	 (return-string (send-strings (format nil "help ~a" query) :show gnuplot-instance)))
     (if return-string? return-string nil)))
 
 (defun show (topic &optional return-string? (gnuplot-instance *gnuplot*))
   "Prints all the gnuplot show info concerning 'topic'. Set 'return-string?' to t to return the show information as a string."
-  (let* ((query (if (symbolp topic) (sb-unicode:lowercase (symbol-name topic)) topic))
+  (let* ((query (if (symbolp topic) (string-downcase (symbol-name topic)) topic))
 	 (return-string (send-strings (format nil "show ~a" query) :show gnuplot-instance)))
     (if return-string? return-string nil)))
 
 (defun retrieve (topic)
   "Returns all the gnuplot show info concerning 'topic' as a list of strings. Does not print the 'show topic' information."
-  (let ((query (if (symbolp topic) (sb-unicode:lowercase (symbol-name topic)) topic)))
+  (let ((query (if (symbolp topic) (string-downcase (symbol-name topic)) topic)))
     (send-strings (format nil "show ~a" query) :get)))
 
 (defun help-cl-gnuplot ()
