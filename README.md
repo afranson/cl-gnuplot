@@ -7,16 +7,13 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
 (require 'cl-gnuplot)
 (plt:reset)
 (plt:plot (plt:basic-read-file "./resources/quick-example-file.txt" :manual-delim #\tab) "w lp title 'Sample 1'"
+          (plt:linspace 40 960 :len 400) (lambda (x) (/ (* 200 1.16d6) (+ (expt (- x 635) 2) 200))) "w p pt 6 ps 3 title 'Eyeballing'"
           :yrange "[*:2e6]"
           :xlabel "'Raman Shift (1/cm)'"
           :ylabel "'Counts (a.u.)'"
           :grid "x mx"
           :xtics "0,100,1000"
           :mxtics "4")
-(plt:plot-function :function (lambda (x) (/ (* 200 1.16d6) (+ (expt (- x 635) 2) 200)))
-                   :x (plt:linspace 40 960 :len 400)
-                   :plot-format "w p pt 6 ps 3 title 'Eyeballing'"
-                   :add t)
 				   
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/quick-example.png")
 ```
@@ -27,19 +24,25 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
 ```
 (require 'cl-gnuplot)
 (plt:reset)
+;; Format string-less plotting
 (plt:plot '((1 2) (3 5) (5 7) (6 2) (7 5) (10 7) (14 8)) ;; 2d data as pairs of xy data
           '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) ;; 2d data as a list of x and a list of y data
+          (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) ;; 2d data as a list of x data followed by a function
+          ;; 1d data all by itself (with no format string) can only appear at the end
           '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
           )
-(plt:plot plt::example-2d-data "w lp title 'format strings after data'"
+;; Format string-full plotting
+(plt:plot :terminal "qt lw 4 font ',40' size 1920,1080"
+          plt::example-2d-data "w lp title 'put format strings'"
+          (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) "w lp title 'after data'"
           '(10 9 8 7 6 5 4 3 2 1) "w lp title 'And rearrange them later'"
-          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'You can also put'"
+          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'You can also'"
           :ylabel "'And extra commands'"
           :xlabel "'before and after'")
 (plt:plot-add '((2 6) (6 8) (10 5)) "w lp title 'And add data later'"
           :key "bottom right font ',25'")
 		  
-(plt:rearrange-plots '(2 0 3 1)) ;; Shuffle the plots into a more desirable order
+(plt:rearrange-plots '(3 0 1 2 4)) ;; Shuffle the plots into a more desirable order
 (plt:resend-plots) ;; Different than replot which just send "replot" to gnuplot. This resends all plot information.
 
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/2d-plotting.png")
@@ -75,10 +78,11 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
 ```
 ![3d-plotting](./resources/3d-plotting.png "3D Plotting")
 
-## 3D Data Loading and Heatmap
+## 3D Data Loading and Heatmaps
 ```
 (require 'cl-gnuplot)
 (plt:reset)
+
 (plt:plot :terminal "qt lw 4 font ',25' size 1920,1080" 
           (plt:partition 81 (plt:basic-read-file "./resources/3d-data-example.txt")) "u 1:2:8 w pm3d notitle"
           :pm3d "at sb depthorder"
@@ -137,7 +141,6 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
 
 ;;; Useful Utilities
 (plt:basic-read-file "filename")
-(plt:plot-function :function (lambda (x) (/ (x + 4)) :x (plt:linspace 0 10 :len 100))
 (plt:linspace 0 10 :step 1 :type 'integer)
 (plt:range 0 -5)
 (plt:transpose (plt:range 5) '(3.4 6.7 -2.3 4.5))

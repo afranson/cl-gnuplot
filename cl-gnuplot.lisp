@@ -414,43 +414,41 @@ Symbol: :my-symbol
 	 :string)
 	((symbolp x)
 	 :symbol)
+	((functionp x)
+	 :function)
 	(t
-	 (intern (format nil "~dD" (sequence-depth x)) 'keyword))))
+	 (intern (format nil "~dD" (sequence-depth x)) 'keyword)))) ;; :1D, :2D, :3D, ...
 
 (defun what-is-the-next-plot-object (command-list)
-  "Takes in a plot command list, parses it into symbols, and returns possible matches for the next largest plottable set of data."
-  (let ((command-list-pattern (mapcar #'which-data-organization command-list)))
+  "Takes in a plot command list, parses it into symbols, and return match for the next largest plottable set of data."
+  (let ((command-list-pattern (mapcar #'which-data-organization command-list))
+	(plot-object-precedence '((:symbol)
+				  (:string)
+				  (:1d :string)
+				  (:2d :string)
+				  (:3d :string)
+				  (:1d :function :string)
+				  (:1d :1d :string)
+				  (:1d :1d :2d :string)
+				  (:1d :1d :function :string)
+				  (:1d :1d :function)
+				  (:1d :1d :2d)
+				  (:1d :1d)
+				  (:1d :function)
+				  (:3d)
+				  (:2d)
+				  (:1d))))
     (labels ((commands-pattern-eq (match-pattern)
 	       "Check if the command-pattern contains the match-pattern."
 	       (if (> (length match-pattern) (length command-list-pattern))
 		   nil
 		   (every #'eq command-list-pattern match-pattern))))
-      (cond ((null command-list)
-	     nil)
-	    ((commands-pattern-eq '(:symbol))
-	     :symbol)
-	    ((commands-pattern-eq '(:string))
-	     :string)
-	    ((commands-pattern-eq '(:1d :string))
-	     :1d-string)
-	    ((commands-pattern-eq '(:2d :string))
-	     :2d-string)
-	    ((commands-pattern-eq '(:3d :string))
-	     :3d-string)
-	    ((commands-pattern-eq '(:1d :1d :string))
-	     :1d-1d-string)
-	    ((commands-pattern-eq '(:1d :1d :2d :string))
-	     :1d-1d-2d-string)
-	    ((commands-pattern-eq '(:1d :1d :2d))
-	     :1d-1d-2d)
-	    ((commands-pattern-eq '(:1d :1d))
-	     :1d-1d)
-	    ((commands-pattern-eq '(:3d))
-	     :3d)
-	    ((commands-pattern-eq '(:2d))
-	     :2d)
-	    ((commands-pattern-eq '(:1d))
-	     :1d)))))
+      ;; Find largest matching pattern, combine pattern with dashes, turn into keyword, hand off to 'parse-plot-args'
+      (when command-list
+	(intern (reduce (lambda (x y) (concatenate 'string x "-" y))
+			(mapcar #'symbol-name
+				(find-if #'commands-pattern-eq plot-object-precedence)))
+		:keyword)))))
 
 (defstruct plot-object
   "Structure for holding classified plot args. Code is a symbol (a command, :plot, or :plot-3d). Data is the command data or the plot data. Format is a plot format string."
@@ -458,6 +456,7 @@ Symbol: :my-symbol
   (data nil :type (or string list))
   (format "" :type string))
 
+;; TODO Need a better string to 2d vs 3d detection mechanism
 (defvar ignore-ys-in-text nil)
 (defun parse-plot-args (args)
   "Parses arguments passed to one of the plot functions. Returns \"plot-object\"s to be turned into strings and then send to the gnuplot process. Accepts data and symbols to simultaneously to plotting of data and modification of plot settings."
@@ -470,12 +469,16 @@ Symbol: :my-symbol
 	      (:symbol (values (make-plot-object :code (first args) :data (second args)) (cddr args)))
 	      (:string (values (make-plot-object :code (if ignore-ys-in-text :plot (if (position #\y (first args)) :plot-3d :plot)) :format (first args)) (cdr args)))
 	      (:1d (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (auto-label)) (cdr args)))
+	      (:1d-function (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (auto-label)) (cddr args)))
 	      (:1d-1d (values (make-plot-object :code :plot :data (transpose (subseq args 0 2)) :format (auto-label)) (cddr args)))
+	      (:1d-1d-function (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (map-nest-2 (caddr args) (car args) (cadr args))) :format (auto-label)) (cdddr args)))
 	      (:1d-1d-2d (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (caddr args)) :format (auto-label :dim :3d)) (cdddr args)))
 	      (:2d (values (make-plot-object :code :plot :data (car args) :format (auto-label)) (cdr args)))
 	      (:3d (values (make-plot-object :code :plot-3d :data (car args) :format (auto-label :dim :3d)) (cdr args)))
 	      (:1d-string (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (maybe-add-dash (second args))) (cddr args)))
+	      (:1d-function-string (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (maybe-add-dash (caddr args))) (cdddr args)))
 	      (:1d-1d-string (values (make-plot-object :code :plot :data (transpose (subseq args 0 2)) :format (maybe-add-dash (third args))) (cdddr args)))
+	      (:1d-1d-function-string (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (map-nest-2 (caddr args) (car args) (cadr args))) :format (maybe-add-dash (cadddr args))) (cddddr args)))
 	      (:1d-1d-2d-string (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (caddr args)) :format (maybe-add-dash (fourth args))) (cddddr args)))
 	      (:2d-string (values (make-plot-object :code :plot :data (car args) :format (maybe-add-dash (second args))) (cddr args)))
 	      (:3d-string (values (make-plot-object :code :plot-3d :data (car args) :format (maybe-add-dash (second args))) (cddr args))))
@@ -631,24 +634,6 @@ Altogether:
 	      (mapcar (lambda (x) (apply #'plot x)) plots-and-options))
     (send-strings "unset multiplot")))
 
-(defun plot-function (&key function x y plot-format plot-options add)
-  "Quickly plot a function of 1 or 2 variables over x (and y) list inputs.
-(plot-function :function (lambda (x) (- (expt x 2) (* 4 x) 4))
-		    :x (linspace -10 10 :len 100) 
-		    :plot-format \"w lp title \\\"Quick Parabola\\\"\"
-		    :plot-options (list :xlabel \"\\\"Time\\\"\" :ylabel \"\\\"Amplitude\\\"\"))"
-  (let ((plot-fun (if add #'plot-add #'plot)))
-    (cond ((null y)
-	   (if plot-format
-	       (funcall plot-fun x (mapcar function x) plot-format)
-	       (funcall plot-fun x (mapcar function x)))
-	   (apply #'send-plot-options-and-replot plot-options))
-	  (t
-	   (if plot-format
-	       (funcall plot-fun x y (map-nest-2 function x y) plot-format)
-	       (funcall plot-fun x y (map-nest-2 function x y)))
-	   (apply #'send-plot-options-and-replot plot-options)))))
-
 (defun mpltest ()
   (multiplot "layout 2,2 title \"Multiplot Title\""
 	     (list '(1 2 3 4) "w lp title \"plot 1\"" '(2 1 4 3) "w lp title \"Double plot!\"" :xlabel "\"Amps\"" :ylabel "\"Pain\"" :key "top left" :grid "")
@@ -663,4 +648,4 @@ Altogether:
   (init-gnuplot)
   (send-plot-options :terminal "qt size 1920,1080 linewidth 4 font 'Arial,40'"))
 
-(export '(multiplot plot-function))
+(export '(multiplot))
