@@ -46,6 +46,14 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
 ```
 ![2d-plotting](./resources/2d-plotting.png "2D Plotting")
 
+## More Niche 2D Stuff
+For reference.
+```
+(require 'cl-gnuplot)
+(plt:reset)
+
+```
+
 TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding a format string.
 
 # 3D Plotting
@@ -67,7 +75,19 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
 ```
 ![3d-plotting](./resources/3d-plotting.png "3D Plotting")
 
-TODO: Add surface plot / heatmap plot with a file example
+## 3D Data Loading and Heatmap
+```
+(require 'cl-gnuplot)
+(plt:reset)
+(plt:plot :terminal "qt lw 4 font ',25' size 1920,1080" 
+          (plt:partition 81 (plt:basic-read-file "./resources/3d-data-example.txt")) "u 1:2:8 w pm3d notitle"
+          :pm3d "at sb depthorder"
+          :view "60,30"
+          :xlabel "'X'" :ylabel "'Y'" :cblabel "'Z (a.u.)'"
+          :ztics "unset" :border "15" :xtics "offset 0,-0.25")
+(plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-file-plotting.png")
+```
+![3d-file-plotting](./resources/3d-file-plotting.png "3D File Plotting and Heatmap")
 
 # Typical Commands
 
