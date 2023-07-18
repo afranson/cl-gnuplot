@@ -66,7 +66,7 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
 (plt:help-cl-gnuplot)
 
 ;;; Useful Utilities
-(plt:basic-read-file
+(plt:basic-read-file "filename")
 (plt:plot-function :function (lambda (x) (/ (x + 4)) :x (plt:linspace 0 10 :len 100))
 (plt:linspace 0 10 :step 1 :type 'integer)
 (plt:range 0 -5)
