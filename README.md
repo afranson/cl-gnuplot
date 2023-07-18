@@ -17,6 +17,7 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
                    :x (plt:linspace 40 960 :len 400)
                    :plot-format "w p pt 6 ps 3 title 'Eyeballing'"
                    :add t)
+				   
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/quick-example.png")
 ```
 ![quick-example](./resources/quick-example.png "Quick Data Loading and 2D Plotting")
@@ -30,16 +31,22 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
           '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) ;; 2d data as a list of x and a list of y data
           '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
           )
-(plt:plot plt::example-2d-data "w lp title 'You can also'"
-          '(10 9 8 7 6 5 4 3 2 1) "w lp title 'put format strings'"
-          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'after data'"
+(plt:plot plt::example-2d-data "w lp title 'format strings after data'"
+          '(10 9 8 7 6 5 4 3 2 1) "w lp title 'And rearrange them later'"
+          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'You can also put'"
           :ylabel "'And extra commands'"
           :xlabel "'before and after'")
 (plt:plot-add '((2 6) (6 8) (10 5)) "w lp title 'And add data later'"
           :key "bottom right font ',25'")
+		  
+(plt:rearrange-plots '(2 0 3 1)) ;; Shuffle the plots into a more desirable order
+(plt:resend-plots) ;; Different than replot which just send "replot" to gnuplot. This resends all plot information.
+
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/2d-plotting.png")
 ```
 ![2d-plotting](./resources/2d-plotting.png "2D Plotting")
+
+TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding a format string.
 
 # 3D Plotting
 Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
@@ -55,9 +62,12 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
           :hidden3d ""
           :xlabel "'X'" :ylabel "'Y'" :zlabel "'Z'" :cblabel "'cb'"
           :view "50,20")
+
 (plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-plotting.png")
 ```
 ![3d-plotting](./resources/3d-plotting.png "3D Plotting")
+
+TODO: Add surface plot / heatmap plot with a file example
 
 # Typical Commands
 

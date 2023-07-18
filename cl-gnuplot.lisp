@@ -454,7 +454,7 @@ Symbol: :my-symbol
 
 (defstruct plot-object
   "Structure for holding classified plot args. Code is a symbol (a command, :plot, or :plot-3d). Data is the command data or the plot data. Format is a plot format string."
-  (code nil :type symbol)
+  (code nil :type symbol) ;; plot or plot-3d
   (data nil :type (or string list))
   (format "" :type string))
 
@@ -519,8 +519,17 @@ Symbol: :my-symbol
     (setf (gnuplot-plot-command-data plots) (append (gnuplot-plot-command-data plots) (reverse new-data)))
     plots))
 
+(defun rearrange-plots (new-order)
+  "Reorders the format and plot data information found in *current-plots* to be compliant with 'new-order'.
+E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), the returned order is (0 3 2 5 4 1)."
+  (setf (gnuplot-plot-command-format *current-plots*)
+	(mapcar (lambda (old-index) (elt (gnuplot-plot-command-format *current-plots*) old-index)) new-order))
+  (setf (gnuplot-plot-command-data *current-plots*)
+	(mapcar (lambda (old-index) (elt (gnuplot-plot-command-data *current-plots*) old-index)) new-order))
+  nil)
+
 (defun send-current-plots-to-gnuplot (seg-plot-objects &optional (plots *current-plots*))
-  "Checks type of plot-object, formats the comman appropriately and sends to gnuplot for plotting."
+  "Checks type of plot-object, formats the commands appropriately and sends to gnuplot for plotting."
   (let ((plot-type (segregated-plot-objects-plot-type seg-plot-objects)))
     (send-strings
      (format-commands
@@ -530,6 +539,10 @@ Symbol: :my-symbol
 			 (list (if (eq plot-type :plot-3d) :3d-data :data) (gnuplot-plot-command-data plots))))))
      :show)
     nil))
+
+(defun resend-plots ()
+  "Sends the *current-plots* object to be replotted. Useful when rearranging plot order with (rearrange-plots ...)"
+  (send-current-plots-to-gnuplot (make-segregated-plot-objects)))
 
 ;; this is the intended entry point
 (defun plot (&rest args)
@@ -597,7 +610,7 @@ Symbol: :my-symbol
   (format nil "*save-all* is now ~a" (setf *save-all* (not *save-all*))))
 
 
-(export '(linspace range transpose basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot plot plot-add plot-with-script plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
+(export '(linspace range transpose basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot plot plot-add rearrange-plots resend-plots plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
 
 ;; TODO heteroaxis plot
 
