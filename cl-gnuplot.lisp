@@ -3,6 +3,7 @@
 (in-package #:cl-gnuplot)
 
 ;; For debugging, use (setf plt::*debug-print-all-commands* nil) to print all strings sent to gnuplot
+;; Go to (defun plot ...) and (defun send-strings ...) for the main entry points of this code base
 
 ;;; utilities
 (defun linspace (start end &key (len 50) (step nil) (type 'float))
@@ -41,9 +42,10 @@ I.e. partition by 2 transforms (1 2 3 4 5 6 ...) -> ((1 2) (3 4) (5 6) ...)"
 	(progn (setf return-sequence (append (list (subseq sequence 0 (length sequence))) return-sequence))
 	       (setf sequence nil)))))
 
-(defun transpose (xy-list)
+(defun transpose (xy-list &optional y-list)
   "Takes 'xy-list' of form ((x1 y1 z1 ...) (x2 y2 z2 ...) ...) and turns it into ((x1 x2 ...) (y1 y2 ...) (z1 z2 ...) ...). Also known as a transpose. It is its own inverse. Works for combinations of lists and vectors."
   (when xy-list
+    (when y-list (setf xy-list (list xy-list y-list)))
     (apply #'map 'list #'list xy-list)))
 
 (defun 3d-data-to-x-list-y-list-z-list (xyz-list)
@@ -92,8 +94,16 @@ I.e. (x-list-y-list-permute '(1 2) '(4 5)) => '((1 4) (1 5) (2 4) (2 5))"
 		 (reverse acc))))
     (inner-split string)))
 
-(defun ss (delim string)
-  )
+(defun basic-read-file (file &optional (comma-is-delim? t))
+  "Ignore lines that don't lead with a number. When a number is found, scans the line until a non-number char is found (not 0-9 or .-+). Takes that character to be a delimiter (usually space or tab). Set comma-is-delim? to nil to allow for commas in numbers and not as the delimiter."
+  (with-open-file (in file :direction :input)
+    (let ((return-lines nil))
+      (do ((i 0 (1+ i))
+	   (line (read-line in nil nil) (read-line in nil nil)))
+	  ((not line) (reverse return-lines))
+	(if (digit-char-p (char line 0))
+	    (let ((delim (find-if (lambda (x) (not (member x (append (list #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\. #\- #\+) (if comma-is-delim? nil '(#\,)))))) line)))
+	      (push (mapcar (lambda (x) (read-from-string x nil nil)) (split-string delim line)) return-lines)))))))
 
 ;;; Data structure
 ;; plot-spec = a plist ... (list :key value :key value)
@@ -534,7 +544,6 @@ Symbol: :my-symbol
 
 ;; TODO could clip the "Press return for more: " bits and merge it all into one string
 ;; TODO could clip the specific usage help and provide that special - Start at "Syntax:\n" and go until "\n\n"
-;; TODO allow for symbol and string entry (convert symbols like :xrange into "xrange")
 (defun help (topic &optional return-string? (gnuplot-instance *gnuplot*))
   "Prints all the gnuplot help info concerning 'topic'. Set 'return-string?' to t to return the help information as a string."
   (let* ((query (if (symbolp topic) (string-downcase (symbol-name topic)) topic))
@@ -581,7 +590,7 @@ Symbol: :my-symbol
   (format nil "*save-all* is now ~a" (setf *save-all* (not *save-all*))))
 
 
-(export '(linspace range transpose *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot plot plot-add plot-with-script plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
+(export '(linspace range transpose basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot plot plot-add plot-with-script plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
 
 ;; TODO heteroaxis plot
 
@@ -602,22 +611,23 @@ Altogether:
 	      (mapcar (lambda (x) (apply #'plot x)) plots-and-options))
     (send-strings "unset multiplot")))
 
-(defun plot-function (&key function x y plot-format plot-options)
+(defun plot-function (&key function x y plot-format plot-options add)
   "Quickly plot a function of 1 or 2 variables over x (and y) list inputs.
 (plot-function :function (lambda (x) (- (expt x 2) (* 4 x) 4))
 		    :x (linspace -10 10 :len 100) 
 		    :plot-format \"w lp title \\\"Quick Parabola\\\"\"
 		    :plot-options (list :xlabel \"\\\"Time\\\"\" :ylabel \"\\\"Amplitude\\\"\"))"
-  (cond ((null y)
-	 (if plot-format
-	     (plot x (mapcar function x) plot-format)
-	     (plot x (mapcar function x)))
-	 (apply #'send-plot-options-and-replot plot-options))
-	(t
-	 (if plot-format
-	     (plot x y (map-nest-2 function x y) plot-format)
-	     (plot x y (map-nest-2 function x y)))
-	 (apply #'send-plot-options-and-replot plot-options))))
+  (let ((plot-fun (if add #'plot-add #'plot)))
+    (cond ((null y)
+	   (if plot-format
+	       (funcall plot-fun x (mapcar function x) plot-format)
+	       (funcall plot-fun x (mapcar function x)))
+	   (apply #'send-plot-options-and-replot plot-options))
+	  (t
+	   (if plot-format
+	       (funcall plot-fun x y (map-nest-2 function x y) plot-format)
+	       (funcall plot-fun x y (map-nest-2 function x y)))
+	   (apply #'send-plot-options-and-replot plot-options)))))
 
 (defun mpltest ()
   (multiplot "layout 2,2 title \"Multiplot Title\""
