@@ -94,15 +94,16 @@ I.e. (x-list-y-list-permute '(1 2) '(4 5)) => '((1 4) (1 5) (2 4) (2 5))"
 		 (reverse acc))))
     (inner-split string)))
 
-(defun basic-read-file (file &optional (comma-is-delim? t))
-  "Ignore lines that don't lead with a number. When a number is found, scans the line until a non-number char is found (not 0-9 or .-+). Takes that character to be a delimiter (usually space or tab). Set comma-is-delim? to nil to allow for commas in numbers and not as the delimiter."
+(defun basic-read-file (file &key (comma-is-delim? t) manual-delim)
+  "Ignore lines that don't lead with a number (0-9 or .+-). When a lead number is found, scans the line until a non-number char is found (not 0-9 or .+-). Takes that character to be a delimiter (usually space, tab, or comma). Set 'comma-is-delim?' to nil to allow for commas in numbers and not as the delimiter. Set 'manual-delim' to allow for first char to be that delim and skip delim checking."
   (with-open-file (in file :direction :input)
     (let ((return-lines nil))
       (do ((i 0 (1+ i))
 	   (line (read-line in nil nil) (read-line in nil nil)))
 	  ((not line) (reverse return-lines))
-	(if (digit-char-p (char line 0))
-	    (let ((delim (find-if (lambda (x) (not (member x (append (list #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\. #\- #\+) (if comma-is-delim? nil '(#\,)))))) line)))
+	(if (or (digit-char-p (char line 0))
+		(member (char line 0) (append '(#\- #\+ #\.) (if manual-delim (list manual-delim)))))
+	    (let ((delim (if manual-delim manual-delim (find-if (lambda (x) (not (member x (append (list #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\. #\- #\+) (if comma-is-delim? nil '(#\,)))))) line))))
 	      (push (mapcar (lambda (x) (read-from-string x nil nil)) (split-string delim line)) return-lines)))))))
 
 ;;; Data structure
@@ -230,13 +231,13 @@ I.e. (x-list-y-list-permute '(1 2) '(4 5)) => '((1 4) (1 5) (2 4) (2 5))"
 
 (defun send-command (&rest keys &key &allow-other-keys)
   "Sends a command to gnuplot instance, 'gp'. Arguments should follow the format:
-(send-command :xrange \"[0:10] noreverse\" :title \"\\\"My Title\\\"\" :yrange \"unset\")
+(send-command :xrange \"[0:10] noreverse\" :title \"'My Title'\" :yrange \"unset\")
 Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, send to global, *gnuplot*, instance. Does not replot, only send to gnuplot. Useful for multiplots or other complex multi-set scripts."
   (send-strings (format-commands keys) :show))
 
 (defun send-command-and-replot (&rest keys &key (gp *gnuplot*) &allow-other-keys)
   "Sends a command to gnuplot instance, 'gp'. Arguments should follow the format:
-(send-command :xrange \"[0:10] noreverse\" :title \"\\\"My Title\\\"\" :yrange \"unset\")
+(send-command :xrange \"[0:10] noreverse\" :title \"'My Title'\" :yrange \"unset\")
 Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, send to global, *gnuplot*, instance."
   (send-strings (concatenate 'string (format-commands keys) "replot") :show gp))
 
@@ -266,9 +267,9 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
 	 (apply #'send-command-and-replot (nconc ,@(make-command-list keys-and-defaults)))))))
 
 (defun-create-plot-options-function
-    (terminal "qt size 1080,1080 linewidth 3 font \"Arial,30\"")
-    (output "\"myfile.png\"")
-  (title "\"My Title\" font \",40\" tc rgb \"red\"")
+    (terminal "qt size 1080,1080 linewidth 3 font 'Arial,30'")
+    (output "'myfile.png'")
+  (title "'My Title' font ',40' tc rgb 'red'")
   (size "ratio 1 1.0,1.0")
   (origin "0.0, 0.0")
   (lmargin "4")
@@ -280,24 +281,24 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
   (yrange "restore")
   (zrange "[*:*] noreverse nowriteback")
   (cbrange "[*:*]")
-  (xlabel "\"xlabel\" offset 0,0,0 font \",12\" enhanced")
-  (ylabel "\"ylabel\" offset 0,0,0 rotate parallel")
-  (zlabel "\"zlabel\" rotate by 13")
-  (xtics "auto add (\"custom tic\" 1.5)")
+  (xlabel "'xlabel' offset 0,0,0 font ',12' enhanced")
+  (ylabel "'ylabel' offset 0,0,0 rotate parallel")
+  (zlabel "'zlabel' rotate by 13")
+  (xtics "auto add ('custom tic' 1.5)")
   (ytics "14")
   (ztics "0,10,40 rotate 90 offset 0,graph 0.05")
   (mxtics "5")
   (mytics "defualt")
   (mztics "10")
-  (cblabel "\"cblabel\" rotate 180")
-  (label "\"example\" at graph 26, 0.23 left rotate by 34 font \",10\" boxed")
+  (cblabel "'cblabel' rotate 180")
+  (label "'example' at graph 26, 0.23 left rotate by 34 font ',10' boxed")
   (palette "-- Just look it up --")
   (view "map 56,103")
   (pm3d "at sb interpolate 0,0 depthorder lighting map")
   (samples "100")
   (isosamples "50")
-  (key "top left title \"keys\" font \",16\" font \",10\" box maxcols 3 maxrows 2 offset screen 0.1,0")
-  (border "31 ls 3 lc rgb \"purple\"")
+  (key "top left title 'keys' font ',16' font ',10' box maxcols 3 maxrows 2 offset screen 0.1,0")
+  (border "31 ls 3 lc rgb 'purple'")
   (grid "noxtics nomztics polar novertical")
   (polar "")
   (log "xy")
@@ -305,8 +306,14 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
   (timefmt "")
   (multiplot ""))
 
-(defun save-last-plot (&optional (terminal "pngcairo") (filename "mytest.png"))
-  "Saves what can be recalled with 'replot' function (i.e. multiplot figures will not work - see 'save-plot' macro to save multiplots easily)."
+(defun save-last-plot (&optional (terminal (or "pngcairo" "pdfcairo" "epscairo" "wxt" "epslatex" "pslatex" "cairolatex" "jpg" "png" "gif")) (filename "mytest.png"))
+  "Saves what can be recalled with 'replot' function (i.e. multiplot figures will not work - see 'save-plot' macro to save multiplots).
+For various reasons, terminals have slight differences. Always find tune the plot and terminal options to suite your needs.
+Some common issues:
+Default terminal assume relative small image sizes and various terminals have different defualt size units. If it looks like your fonts or points are now too large or small, it's likly just the size of your output image is different.
+E.g.
+pngcairo size works in pixels: default is 640x480 pixels @ 72 dpi.
+pdfcairo size works in inches: default is 5x3 inches"
   (send-plot-options :terminal "push")
   (send-plot-options :terminal terminal)
   (send-plot-options :output (format nil "~s" filename))
@@ -315,8 +322,8 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
   (send-plot-options :output "")
   (send-plot-options :terminal "pop"))
 
-(defmacro save-plot ((&optional (terminal "pngcairo") (filename "mytest.png")) &body body)
-  "Saves whatever plot is created in 'body' via the 'terminal' into 'filename'."
+(defmacro save-plot ((&optional (terminal (or "pngcairo" "pdfcairo" "epscairo" "wxt" "epslatex" "pslatex" "pstricks" "cairolatex" "jpg" "png" "gif")) (filename "mytest.png")) &body body)
+  "Saves whatever plot is created in 'body' via the 'terminal' into 'filename'. Useful for multiplots. See 'save-last-plot' function for more details on saving."
   `(progn
      (send-plot-options :terminal "push")
      (send-plot-options :terminal ,terminal)
@@ -584,7 +591,7 @@ Symbol: :my-symbol
   "Closes global gnuplot process and opens a new one. Also reset the global *current-plots*."
   (quit-gnuplot)
   (init-gnuplot)
-  (send-command :terminal "qt size 1920,1080 linewidth 4 font \"Arial,40\""))
+  (send-command :terminal "qt size 1920,1080 linewidth 4 font 'Arial,40'"))
 
 (defun switch-save-all ()
   (format nil "*save-all* is now ~a" (setf *save-all* (not *save-all*))))
@@ -641,6 +648,6 @@ Altogether:
 (unless (and (streamp (gnuplot-error-stream *gnuplot*))
 	     (open-stream-p (gnuplot-error-stream *gnuplot*)))
   (init-gnuplot)
-  (send-plot-options :terminal "qt size 1920,1080 linewidth 4 font \"Arial,40\""))
+  (send-plot-options :terminal "qt size 1920,1080 linewidth 4 font 'Arial,40'"))
 
 (export '(multiplot plot-function))
