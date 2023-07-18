@@ -5,6 +5,7 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
 # Quick Example
 ```
 (require 'cl-gnuplot)
+(plt:reset)
 (plt:plot (plt:basic-read-file "./resources/quick-example-file.txt" :manual-delim #\tab) "w lp title 'Sample 1'"
           :yrange "[*:2e6]"
           :xlabel "'Raman Shift (1/cm)'"
@@ -18,28 +19,45 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
                    :add t)
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/quick-example.png")
 ```
-![quick-example](./resources/quick-example.png "Quick Data Loading and Plotting")
+![quick-example](./resources/quick-example.png "Quick Data Loading and 2D Plotting")
 
 # 2D Plotting
+Default is "with linespoints" ("w lp"). You must use a format string with "with lines" ("w l") or "with points" ("w p") do just do one or the other.
 ```
 (require 'cl-gnuplot)
+(plt:reset)
 (plt:plot '((1 2) (3 5) (5 7) (6 2) (7 5) (10 7) (14 8)) ;; 2d data as pairs of xy data
           '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) ;; 2d data as a list of x and a list of y data
-		  '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
-		  )
+          '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
+          )
 (plt:plot plt::example-2d-data "w lp title 'You can also'"
           '(10 9 8 7 6 5 4 3 2 1) "w lp title 'put format strings'"
-		  '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'after data'"
-		  :ylabel "'And extra commands'"
+          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'after data'"
+          :ylabel "'And extra commands'"
           :xlabel "'before and after'")
+(plt:plot-add '((2 6) (6 8) (10 5)) "w lp title 'And add data later'"
+          :key "bottom right font ',25'")
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/2d-plotting.png")
 ```
 ![2d-plotting](./resources/2d-plotting.png "2D Plotting")
 
 # 3D Plotting
+Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
 ```
-
+(require 'cl-gnuplot)
+(plt:reset)
+(plt:plot :terminal "qt lw 4 font ',25' size 1920,1080"
+          '(((0 0 5) (1 0 10) (2 0 0))
+            ((0 1 0) (1 1 5) (2 1 0))
+            ((0 2 5) (1 2 0) (2 2 0))) "w l pal title 'Top'" ;; 3d data as sets of xyz data
+          '(-1 0 1) '(-2 0 2) 
+          '((-4 -3 -2) (-4 -5 -6) (0 0 -1)) "w l pal title 'Bottom'" ;; 3d data as x list, y list, then z matrix
+          :hidden3d ""
+          :xlabel "'X'" :ylabel "'Y'" :zlabel "'Z'" :cblabel "'cb'"
+          :view "50,20")
+(plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-plotting.png")
 ```
+![3d-plotting](./resources/3d-plotting.png "3D Plotting")
 
 # Typical Commands
 
