@@ -75,9 +75,10 @@ TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, 
 Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
 
 Below are all the ways to make a 3d plot via the 'plot' function.
-* xyz sets with multiple rows
-* x-list y-list z-matrix
+* xyz-matrix
+* x-list y-list 2d-z-matrix
 * x-list y-list function
+* xy-matrix function
 * gnuplot builtin, e.g. "airy(x) + cos(y)"
 * direct file read
 ```
@@ -87,18 +88,20 @@ Below are all the ways to make a 3d plot via the 'plot' function.
 (plt:plot :terminal "qt lw 4 font ',25' size 1920,1080"
           '(((0 0 15) (1 0 20) (2 0 10))
             ((0 1 10) (1 1 15) (2 1 10))
-            ((0 2 15) (1 2 10) (2 2 10))) "w l pal title 'Top 3d'" ;; 3d data as sets of sets of xyz data
-          '(-2 0 2) '(0 2 4) (lambda (x y) (+ (sin x) (cos y))) "w lp ps 2 pal title 'function'"
-		  '(-1 0 1) '(-2 0 2) 
-          '((7 6 5) (6 5 4) (5 4 3)) "w l pal title 'Next 1d-1d-2d'" ;; 3d data as x list, y list, then z matrix
-          "-10 + 3*(cos(5*x) - sin(5*y)) w l pal title 'builtins'"
-          "'./resources/quick-3d-data.txt' w lp ps 2 pal title 'direct read'"
+            ((0 2 15) (1 2 10) (2 2 10))) "w l pal title 'Top 3d'" ;; 3d xyz-matrix
+          '(-2 0 2) '(0 2 4) (lambda (x y) (+ (sin x) (cos y))) "w lp ps 2 pal title 'function'" ;; x-list y-list function
+          '(((1.5 -3) (1.9 -2.9)) ((1.6 -2.1) (2.0 -2))) (lambda (x y) (+ (cos x) (sin y))) "w pm3d pal title 'function 2'" ;; 3d xy-matrix function
+          '(-1 0 1) '(-2 0 2) 
+          '((7 6 5) (6 5 4) (5 4 3)) "w l pal title 'Next 1d-1d-2d'" ;; x-list y-list 2d-z-matrix
+          "-10 + 3*(cos(5*x) - sin(5*y)) w l pal title 'builtins'" ;; gnuplot builtins
+          "'./resources/quick-3d-data.txt' w lp ps 2 pal title 'direct read'" ;; direct file read
+          :pm3d "border"
           :hidden3d ""
           :xlabel "'X'" :ylabel "'Y'" :zlabel "'Z'" :cblabel "'cb' offset 0,1" :colorbox "horizontal user origin 0.2,0.9 size 0.5,0.03"
           :xtics "offset 0,-0.3"
           :view "60,30")
 		  
-(plt:rearrange-plots '(0 2 1 3 4))
+(plt:rearrange-plots '(0 3 1 2 4 5))
 (plt:resend-plots)
 
 (plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-plotting.png")

@@ -65,6 +65,22 @@ I.e. partition by 2 transforms (1 2 3 4 5 6 ...) -> ((1 2) (3 4) (5 6) ...)"
 	       (map 'list (lambda (x) (elt numbers (1- (digit-char-p x)))) symbol-name))))
     (mapcar (lambda (y) (mapcar (lambda (x) (apply function (symbol-order order (list x y)))) list-inner)) list-outer)))
 
+(defun mapcar-f-over-xy-matrix (function xy-matrix)
+  "Maps 'function' over the 2nd deepest elements of 'xy-matrix'. 'xy-matrix' is a 3d matrix of the form
+'(((x00 y00) (x01 y01) ...)
+  ((x10 y10) (x11 y11) ...)
+  ...)
+and 'function' gets applied to each xy pair and inserted after in the form
+'(((x00 y00 f(x00,y00)) (x01 y01 f(x01,y01)) ...)
+  ((x10 y10 f(x10,y10)) (x11 y11 f(x11,y11)) ...)
+  ...)."
+  (cond ((null xy-matrix)
+	 nil)
+	((and (listp xy-matrix) (numberp (car xy-matrix)))
+	 (append xy-matrix (list (apply function xy-matrix))))
+	(t
+	 (map (type-of xy-matrix) #'(lambda (x) (mapcar-f-over-xy-matrix function x)) xy-matrix))))
+
 (defun x-list-y-list-z-matrix-to-3d-data (x-list y-list z-matrix)
   "Turns a 1D x-list, a 1D y-list, and a 2D z-matrix (list of lists) and returns a 3D matrix (list of lists of lists) with every xyz pairing."
   (labels ((x-list-y-list-permute (x-list y-list)
@@ -430,12 +446,14 @@ Symbol: :my-symbol
 				  (:2d :string)
 				  (:3d :string)
 				  (:1d :function :string)
+				  (:3d :function :string)
 				  (:1d :1d :string)
 				  (:1d :1d :2d :string)
 				  (:1d :1d :function :string)
 				  (:1d :1d :function)
 				  (:1d :1d :2d)
 				  (:1d :1d)
+				  (:3d :function)
 				  (:1d :function)
 				  (:3d)
 				  (:2d)
@@ -474,6 +492,7 @@ Symbol: :my-symbol
 	      (:string (values (make-plot-object :code string-code :format (first args)) (cdr args)))
 	      (:1d (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (auto-label)) (cdr args)))
 	      (:1d-function (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (auto-label)) (cddr args)))
+	      (:3d-function (values (make-plot-object :code :plot-3d :data (mapcar-f-over-xy-matrix (cadr args) (car args)) :format (auto-label)) (cddr args)))
 	      (:1d-1d (values (make-plot-object :code :plot :data (transpose (subseq args 0 2)) :format (auto-label)) (cddr args)))
 	      (:1d-1d-function (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (map-nest-2 (caddr args) (car args) (cadr args))) :format (auto-label)) (cdddr args)))
 	      (:1d-1d-2d (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (caddr args)) :format (auto-label :dim :3d)) (cdddr args)))
@@ -481,6 +500,7 @@ Symbol: :my-symbol
 	      (:3d (values (make-plot-object :code :plot-3d :data (car args) :format (auto-label :dim :3d)) (cdr args)))
 	      (:1d-string (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (maybe-add-dash (second args))) (cddr args)))
 	      (:1d-function-string (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (maybe-add-dash (caddr args))) (cdddr args)))
+	      (:3d-function-string (values (make-plot-object :code :plot-3d :data (mapcar-f-over-xy-matrix (cadr args) (car args)) :format (maybe-add-dash (caddr args))) (cdddr args)))
 	      (:1d-1d-string (values (make-plot-object :code :plot :data (transpose (subseq args 0 2)) :format (maybe-add-dash (third args))) (cdddr args)))
 	      (:1d-1d-function-string (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (map-nest-2 (caddr args) (car args) (cadr args))) :format (maybe-add-dash (cadddr args))) (cddddr args)))
 	      (:1d-1d-2d-string (values (make-plot-object :code :plot-3d :data (x-list-y-list-z-matrix-to-3d-data (car args) (cadr args) (caddr args)) :format (maybe-add-dash (fourth args))) (cddddr args)))
