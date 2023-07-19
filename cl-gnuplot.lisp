@@ -361,8 +361,10 @@ pdfcairo size works in inches: default is 5x3 inches"
 		    ((member (car command) (list :plot :splot))
 		     "~a ~{~a~^, ~}~&")
 		    ((eq (car command) :data) ;; expects (((x y z ...) (x y z ...) ...)) format
+		     (setf (cadr command) (remove-if-not #'identity (cadr command))) ;; remove nils
 		     "~*~{~{~{~,9,,,,,'eg~^ ~}~&~}e~&~}")
 		    ((eq (car command) :3d-data) ;; expects ((((x y z ...) (x y z ...) ...) ((x y z ...) (x y z ...) ...))) format
+		     (setf (cadr command) (remove-if-not #'identity (cadr command))) ;; remove nils
 		     "~*~{~{~{~{~,9,,,,,'eg~^ ~}~&~}~^~%~}e~&~}")
 		    ((string= (cadr command) "unset") ;; unset commands
 		     "unset ~a~&")
@@ -457,7 +459,9 @@ Symbol: :my-symbol
   (format "" :type string))
 
 ;; TODO Need a better string to 2d vs 3d detection mechanism
-(defvar ignore-ys-in-text nil)
+(defvar string-code :plot)
+(defun string-code-to-3d () (setf string-code :plot-3d))
+(defun string-code-to-2d () (setf string-code :plot))
 (defun parse-plot-args (args)
   "Parses arguments passed to one of the plot functions. Returns \"plot-object\"s to be turned into strings and then send to the gnuplot process. Accepts data and symbols to simultaneously to plotting of data and modification of plot settings."
   (labels ((maybe-add-dash (string)
@@ -467,7 +471,7 @@ Symbol: :my-symbol
 	(multiple-value-bind (object rest)
 	    (ecase (what-is-the-next-plot-object args)
 	      (:symbol (values (make-plot-object :code (first args) :data (second args)) (cddr args)))
-	      (:string (values (make-plot-object :code (if ignore-ys-in-text :plot (if (position #\y (first args)) :plot-3d :plot)) :format (first args)) (cdr args)))
+	      (:string (values (make-plot-object :code string-code :format (first args)) (cdr args)))
 	      (:1d (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (auto-label)) (cdr args)))
 	      (:1d-function (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (auto-label)) (cddr args)))
 	      (:1d-1d (values (make-plot-object :code :plot :data (transpose (subseq args 0 2)) :format (auto-label)) (cddr args)))
@@ -499,13 +503,13 @@ Symbol: :my-symbol
 	(otherwise (segregate-plots (rest args) plots (append (list (first args)) settings))))))
 
 (defun make-sure-codes-match (seg-plot-objects)
-  "Changes the codes of plottable objects. If a string is found with a 'y' present, assumes plot-3d unless 'ignore-ys-in-text' is true. e.g. 'cos(x)+sin(y)' vs 'airy(x)'."
+  "Changes the codes of plottable objects."
   (if (segregated-plot-objects-plottables seg-plot-objects)
       (let ((preffered-code (plot-object-code (car (segregated-plot-objects-plottables seg-plot-objects)))))
 	(setf (segregated-plot-objects-plot-type seg-plot-objects) preffered-code)
 	(dolist (element (segregated-plot-objects-plottables seg-plot-objects) seg-plot-objects)
 	  (if (not (eq preffered-code (plot-object-code element)))
-	      (error "Attempting to mix 2d and 3d plots.~%If this is incorrect, try (setf plt:ignore-ys-in-text t)."))))
+	      (error "Attempting to mix 2d and 3d plots."))))
       seg-plot-objects))
 
 (defun add-plots-to-current-plots (seg-plot-objects &optional (plots *current-plots*) overwrite)
@@ -517,7 +521,8 @@ Symbol: :my-symbol
     (setf (gnuplot-plot-command-type plots) (segregated-plot-objects-plot-type seg-plot-objects))
     (dolist (element (segregated-plot-objects-plottables seg-plot-objects))
       (push (plot-object-format element) new-formats)
-      (when (plot-object-data element) (push (plot-object-data element) new-data)))
+      ;;(when (plot-object-data element) (push (plot-object-data element) new-data))
+      (push (plot-object-data element) new-data))
     (setf (gnuplot-plot-command-format plots) (append (gnuplot-plot-command-format plots) (reverse new-formats)))
     (setf (gnuplot-plot-command-data plots) (append (gnuplot-plot-command-data plots) (reverse new-data)))
     plots))
@@ -554,7 +559,7 @@ E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), th
   (setf *auto-label* 0)
   (let* ((seg-plots (make-sure-codes-match (segregate-plots (parse-plot-args args)))))
     (send-current-plots-to-gnuplot seg-plots
-                                   (setf *current-plots* (add-plots-to-current-plots seg-plots *current-plots* t)))
+				   (setf *current-plots* (add-plots-to-current-plots seg-plots *current-plots* t)))
     (when *save-all* (save-last-plot))))
 
 (defun plot-add (&rest args)
@@ -613,7 +618,7 @@ E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), th
   (format nil "*save-all* is now ~a" (setf *save-all* (not *save-all*))))
 
 
-(export '(linspace range transpose partition basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot plot plot-add rearrange-plots resend-plots plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
+(export '(linspace range transpose partition basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot string-code-to-2d string-code-to-3d plot plot-add rearrange-plots resend-plots plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
 
 ;; TODO heteroaxis plot
 

@@ -3,6 +3,7 @@
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
 # Quick Example
+Load data with plt:basic-read-file, plot functions by providing x data and a function, throw it all into one call to plt:plot with all your settings and you're off to the races.
 ```
 (require 'cl-gnuplot)
 (plt:reset)
@@ -14,7 +15,7 @@ Interact with gnuplot via common lisp in a simple, intuitive manner. Made specif
           :grid "x mx"
           :xtics "0,100,1000"
           :mxtics "4")
-				   
+
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/quick-example.png")
 ```
 ![quick-example](./resources/quick-example.png "Quick Data Loading and 2D Plotting")
@@ -24,26 +25,29 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
 ```
 (require 'cl-gnuplot)
 (plt:reset)
-;; Format string-less plotting
+;; Data w/o format strings for quick plotting
 (plt:plot '((1 2) (3 5) (5 7) (6 2) (7 5) (10 7) (14 8)) ;; 2d data as pairs of xy data
           '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) ;; 2d data as a list of x and a list of y data
           (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) ;; 2d data as a list of x data followed by a function
           ;; 1d data all by itself (with no format string) can only appear at the end
           '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
           )
-;; Format string-full plotting
+
+;; Data with format strings (can also mix and match)
 (plt:plot :terminal "qt lw 4 font ',40' size 1920,1080"
-          plt::example-2d-data "w lp title 'put format strings'"
-          (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) "w lp title 'after data'"
+          plt::example-2d-data "w lp title 'strings after data'"
+          (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) "w lp title 'from function'"
           '(10 9 8 7 6 5 4 3 2 1) "w lp title 'And rearrange them later'"
-          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'You can also'"
-          :ylabel "'And extra commands'"
+          '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) "w lp title 'You can also put format'"
+		  "7+sin(x) w lp title 'gnuplot''s sin(x)'"
+		  "'./resources/2d-plotting-example.txt' w lp title 'from file'"
+          :ylabel "'And add extra commands'"
           :xlabel "'before and after'")
 (plt:plot-add '((2 6) (6 8) (10 5)) "w lp title 'And add data later'"
           :key "bottom right font ',25'")
-		  
-(plt:rearrange-plots '(3 0 1 2 4)) ;; Shuffle the plots into a more desirable order
-(plt:resend-plots) ;; Different than replot which just send "replot" to gnuplot. This resends all plot information.
+
+(plt:rearrange-plots '(3 0 2 6 1 5 4)) ;; Shuffle the plots into a more desirable order
+(plt:resend-plots) ;; Different than (plt:replot) which just sends "replot" to gnuplot. This resends all plot information.
 
 (plt:save-last-plot "pngcairo lw 4 font ',40' size 1920,1080" "./resources/2d-plotting.png")
 ```
@@ -57,7 +61,7 @@ For reference.
 
 ```
 
-TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding a format string.
+TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding format strings and settings.
 
 # 3D Plotting
 Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
@@ -92,6 +96,11 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
 (plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-file-plotting.png")
 ```
 ![3d-file-plotting](./resources/3d-file-plotting.png "3D File Plotting and Heatmap")
+
+# Multiplot
+```
+(require 'cl-gnuplot)
+```
 
 # Typical Commands
 
@@ -148,9 +157,9 @@ Default is "with pm3d". You must use a format string "with lines" ("w l") to do 
 
 # Just Let Me Use Gnuplot Syntax Dangit
 ```
-(plt:send-strings (list "set terminal qt enhanced font 'arial,16' size 1920,1080"
-                        "plot 'mydata.txt' w lp u 1:2 title 'override'"
-                        "set xlabel 'Booyah' font ',300'"))
+(plt:send-strings (list "set terminal qt enhanced font 'arial,30' size 1920,1080"
+                        "plot './resources/quick-example-file.txt' w lp u 1:2 title 'Override'"
+                        "set xlabel 'Proof of Concept' font ',20'"))
 ```
 
 ## License
