@@ -106,6 +106,7 @@ Below are all the ways to make a 3d plot via the 'plot' function.
 ![3d-plotting](./resources/3d-plotting.png "3D Plotting")
 
 ## 3D Data Loading and Heatmaps
+This can be done via a direct read (with string-code-to-3d) or 'basic-read-file' and 'partition'. Option 2 is great when you need to get the data and do manipulations like derivatives, background subtraction, scaling, etc.
 ```
 (require 'cl-gnuplot)
 (plt:reset)
@@ -121,9 +122,21 @@ Below are all the ways to make a 3d plot via the 'plot' function.
 ![3d-file-plotting](./resources/3d-file-plotting.png "3D File Plotting and Heatmap")
 
 # Multiplot
+Multiplot works by wrapping multiple plots inside one function call. The 'layout' option allows for easy position of plots on a grid. You can also forgo using 'layout' and manually position plots via the 'origin' and 'size' options in the individual plot arguments. Besides that, everything in the 4 plots below is the exact same syntax as what would be given to a 'plot' call like above.
+
+'save-last-plot' does not work with multiplot. Instead, the macro 'save-plot' is wrapped around the function. 'save-plot' will also work with any plots that do not 'replot' properly ('save-last-plot' uses 'replot' to capture the last plot).
 ```
 (require 'cl-gnuplot)
+(plt:reset)
+(plt:save-plot ("pngcairo lw 4 font ',25' size 1920,1080" "./resources/multiplot.png") 
+               (plt:multiplot "layout 2,2 title 'Multiplot Title'"
+                              (list '(1 2 3 4) "w lp title 'plot 1'" '(2 1 4 3) "w lp title 'Double plot!'"
+                                    :xlabel "'Amps'" :ylabel "'Fun'" :key "top left" :grid "")
+                              (list '(10 25 30) "w lp title 'plot 2'" :xlabel "'Bees'")
+                              (list '(1 0 3 10) "w lp title 'plot 3'" :xlabel "'Volts'" :key "unset")
+                              (list '(-2 -4 -6 2) "w lp title 'plot 4'" :xlabel "'Dogs'" :grid "unset" :mxtics "10")))
 ```
+![multiplot-plotting](./resources/multiplot.png "Multiplotting")
 
 # Typical Commands
 
