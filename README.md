@@ -95,8 +95,6 @@ For reference. Forgive the compactness.
 ```
 ![niche-2d-plotting](./resources/niche-2d.png "Specialized 2D Plotting")
 
-TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding format strings and settings.
-
 # 3D Plotting
 Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
 
