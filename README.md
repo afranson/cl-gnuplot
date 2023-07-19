@@ -3,7 +3,7 @@
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
 # Quick Example
-Load data with plt:basic-read-file, plot functions by providing x data and a function, throw it all into one call to plt:plot with all your settings and you're off to the races.
+Load data with plt:basic-read-file, plot functions by providing x data and a function, throw it all into one call to plt:plot with all your settings and you're off to the races. ```(plt:help :grid)``` will print gnuplot help info for grid (or any other command). ```(plt:show :grid)``` prints the current state of grid (or any other command).
 ```
 (require 'cl-gnuplot)
 (plt:reset)
@@ -22,6 +22,14 @@ Load data with plt:basic-read-file, plot functions by providing x data and a fun
 
 # 2D Plotting
 Default is "with linespoints" ("w lp"). You must use a format string with "with lines" ("w l") or "with points" ("w p") do just do one or the other.
+
+Below is an example of all the different accepted ways to make a 2d plot by the 'plot' function.
+* xy pairs list
+* x-list y-list
+* x-list function
+* y-list
+* gnuplot builtin, e.g. "airy(x)"
+* direct file read
 ```
 (require 'cl-gnuplot)
 (plt:reset)
@@ -29,7 +37,7 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
 (plt:plot '((1 2) (3 5) (5 7) (6 2) (7 5) (10 7) (14 8)) ;; 2d data as pairs of xy data
           '(1 3 5 6 7 10 14) '(1 2 3 4 5 6 7) ;; 2d data as a list of x and a list of y data
           (plt:linspace 0 13 :step 0.5) (lambda (x) (- 10 (/ 10 (+ 2 (expt (- x 7) 2))))) ;; 2d data as a list of x data followed by a function
-          ;; 1d data all by itself (with no format string) can only appear at the end
+          ;; 1d data all by itself (with no format string) can only appear as the last data item
           '(10 9 8 7 6 5 4 3 2 1) ;; 2d data as just a list of y data (assuming 0,1,2... as x data)
           )
 
@@ -53,7 +61,7 @@ Default is "with linespoints" ("w lp"). You must use a format string with "with 
 ```
 ![2d-plotting](./resources/2d-plotting.png "2D Plotting")
 
-## More Niche 2D Stuff
+## More Niche 2D Plotting
 For reference.
 ```
 (require 'cl-gnuplot)
@@ -65,18 +73,32 @@ TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, 
 
 # 3D Plotting
 Default is "with pm3d". You must use a format string "with lines" ("w l") to do wireframe style plots.
+
+TODO: Fix rearrange with 3d plots
+
+Below are all the ways to make a 3d plot via the 'plot' function.
+* xyz sets with multiple rows
+* x-list y-list z-matrix
+* x-list y-list function
+* gnuplot builtin, e.g. "airy(x) + cos(y)"
+* direct file read
 ```
 (require 'cl-gnuplot)
 (plt:reset)
+(plt:string-code-to-3d) ;; Hopefully temporary, forces pure string inputs (builtin, direct read) to use splot
 (plt:plot :terminal "qt lw 4 font ',25' size 1920,1080"
-          '(((0 0 5) (1 0 10) (2 0 0))
-            ((0 1 0) (1 1 5) (2 1 0))
-            ((0 2 5) (1 2 0) (2 2 0))) "w l pal title 'Top'" ;; 3d data as sets of xyz data
+          '(((0 0 15) (1 0 20) (2 0 10))
+            ((0 1 10) (1 1 15) (2 1 10))
+            ((0 2 15) (1 2 10) (2 2 10))) "w l pal title 'Top 3d'" ;; 3d data as sets of sets of xyz data
           '(-1 0 1) '(-2 0 2) 
-          '((-4 -3 -2) (-4 -5 -6) (0 0 -1)) "w l pal title 'Bottom'" ;; 3d data as x list, y list, then z matrix
+          '((7 6 5) (6 5 4) (5 4 3)) "w l pal title 'Next 1d-1d-2d'" ;; 3d data as x list, y list, then z matrix
+          '(-2 0 2) '(0 2 4) (lambda (x y) (+ (sin x) (cos y))) "w l pal title 'function'"
+          "-10 + 3*(cos(5*x) - sin(5*y)) w l pal title 'builtins'"
+          "'./resources/quick-3d-data.txt' w lp pal title 'direct read'"
           :hidden3d ""
-          :xlabel "'X'" :ylabel "'Y'" :zlabel "'Z'" :cblabel "'cb'"
-          :view "50,20")
+          :xlabel "'X'" :ylabel "'Y'" :zlabel "'Z'" :cblabel "'cb' offset 0,1" :colorbox "horizontal user origin 0.2,0.9 size 0.5,0.03"
+          :xtics "offset 0,-0.3"
+          :view "60,30")
 
 (plt:save-last-plot "pngcairo lw 4 font ',25' size 1920,1080" "./resources/3d-plotting.png")
 ```
