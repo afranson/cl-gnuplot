@@ -63,11 +63,32 @@ Below is an example of all the different accepted ways to make a 2d plot by the 
 
 ## More Niche 2D Plotting
 For reference.
+* Candlestick
+* Histogram
+* Multiaxis
+* Parametric
+* Piecewise
+* Box plot
+* Rug plot
+* Jitter plot
+* Spider plot 
 ```
 (require 'cl-gnuplot)
 (plt:reset)
-
+(plt:save-plot 
+    ("pngcairo lw 1 font ',12' size 1920,1080" "./resources/niche-2d.png") 
+	(plt:send-plot-options :terminal "qt lw 1 font ',12' size 1920,1080")
+	(plt:string-code-to-2d)
+    (plt:multiplot "layout 3,3 title 'Specialized 2D Plots'"
+                   (list '((1 3 0 6 5) (2 5 0 5 4.5) (3 4.5 3 8 6)) "w candle title 'XMR'"
+                         :mxtics "default" :xtics "auto" :xrange "[0:4]" :boxwidth "0.2" :xlabel "'Time'" :ylabel "'$$$'" :title "'Candlestick'" :key "top left" :grid "")
+                   (list :style "histogram cluster gap 1" :style "data histogram" :style\ fill "pattern 1"
+                         '(4 2 9 7) "u 1 ti 'histo 1'" '(9 8 2 4) "u 1 ti 'histo 2'" '(4 4 5 5) "u 1 ti 'histo 3'"
+                         :boxwidth "1" :ylabel "'Stigs'" :xrange "[-1:4]" :yrange "[0:12]" :title "'Histogram'" :xtics "('before' 0, 'during' 1, 'after' 2, 'GT' 3) rotate by 45 offset 0,-1.5")
+                   (list '(1 0 3 10) "w lp ti 'small axis' axes x1y1" '(1000 700 200 0) "w lp ti 'large axis' axes x1y2" :xlabel "'Volts'" :ytics "nomirror" :y2tics "" :title "'Multiaxis'" :ylabel "'Current 1'" :y2label "'Current 2'" :grid "")
+                   (list :parametric "" "cosh(t),sin(t) w lp title 'cosh(t),sin(t)'" :title "'Parametric Plot'" :xlabel "'X'" :ylabel "'Y'" :grid "")))
 ```
+![niche-2d-plotting](./resources/niche-2d.png "Specialized 2D Plotting")
 
 TODO: Add a multiplot with all the other kinds of 2d plots (bar, violin, histo, etc.) since they're as easy as just adding format strings and settings.
 
@@ -131,13 +152,14 @@ Multiplot works by wrapping multiple plots inside one function call. The 'layout
 ```
 (require 'cl-gnuplot)
 (plt:reset)
-(plt:save-plot ("pngcairo lw 4 font ',25' size 1920,1080" "./resources/multiplot.png") 
-               (plt:multiplot "layout 2,2 title 'Multiplot Title'"
-                              (list '(1 2 3 4) "w lp title 'plot 1'" '(2 1 4 3) "w lp title 'Double plot!'"
-                                    :xlabel "'Amps'" :ylabel "'Fun'" :key "top left" :grid "")
-                              (list '(10 25 30) "w lp title 'plot 2'" :xlabel "'Bees'")
-                              (list '(1 0 3 10) "w lp title 'plot 3'" :xlabel "'Volts'" :key "unset")
-                              (list '(-2 -4 -6 2) "w lp title 'plot 4'" :xlabel "'Dogs'" :grid "unset" :mxtics "10")))
+(plt:save-plot
+    ("pngcairo lw 4 font ',25' size 1920,1080" "./resources/multiplot.png") 
+    (plt:multiplot "layout 2,2 title 'Multiplot Title'"
+                   (list '(1 2 3 4) "w lp title 'plot 1'" '(2 1 4 3) "w lp title 'Double plot!'"
+                         :xlabel "'Amps'" :ylabel "'Fun'" :key "top left" :grid "")
+                   (list '(10 25 30) "w lp title 'plot 2'" :xlabel "'Bees'")
+                   (list '(1 0 3 10) "w lp title 'plot 3'" :xlabel "'Volts'" :key "unset")
+                   (list '(-2 -4 -6 2) "w lp title 'plot 4'" :xlabel "'Dogs'" :grid "unset" :mxtics "10")))
 ```
 ![multiplot-plotting](./resources/multiplot.png "Multiplotting")
 

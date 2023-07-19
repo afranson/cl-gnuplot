@@ -390,7 +390,8 @@ pdfcairo size works in inches: default is 5x3 inches"
 		     "#set ~a ~a~&")
 		    ;; If output is not stdout, do not allow terminal operations
 		    ;; Loops until a valid command is found
-		    ((eq (char (symbol-name (car command)) 0) #\T)
+		    ((and (eq (char (symbol-name (car command)) 0) #\T)
+			  (eq (char (symbol-name (car command)) 1) #\e))
 		     (let ((output (retrieve :output)))
 		       (do ((i 0 (1+ i)))
 			   ((or (>= i 20) (string/= output "")) output)
@@ -656,7 +657,7 @@ Altogether:
 	     (list '(-2 -4 -6 2) \"w lp title \\\"plot 4\\\"\" :xlabel \"\\\"Dogs\\\"\" :grid \"unset\"))"
   (unwind-protect
        (progn (send-strings (format nil "set multiplot ~a" mp-options-string))
-	      (mapcar (lambda (x) (apply #'plot x)) plots-and-options))
+	      (mapcar (lambda (x) (reset) (apply #'plot x)) plots-and-options))
     (send-strings "unset multiplot")))
 
 (defun mpltest ()
