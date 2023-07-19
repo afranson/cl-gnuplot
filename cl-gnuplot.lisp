@@ -550,7 +550,7 @@ E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), th
 
 (defun resend-plots ()
   "Sends the *current-plots* object to be replotted. Useful when rearranging plot order with (rearrange-plots ...)"
-  (send-current-plots-to-gnuplot (make-segregated-plot-objects)))
+  (send-current-plots-to-gnuplot (make-segregated-plot-objects :plot-type (gnuplot-plot-command-type *current-plots*))))
 
 ;; this is the intended entry point
 (defun plot (&rest args)
