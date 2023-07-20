@@ -2,6 +2,13 @@
 
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
+Key Features:
+* Vast majority of gnuplot functionality (2d, 3d, builtins, send data, read files, etc.) via just the ```(plt:plot ...)``` command
+* Use the full power of Lisp to read, generate, and analyze data then easily throw it straight into ```(plt:plot ...)```
+* Combine data and settings into one function call
+* Rearrange and add plots after initial ```(plt:plot ...)``` call
+* Save plots via ```(plt:save-last-plot terminal-info filename)```
+
 # Quick Example
 Load data with plt:basic-read-file, plot functions by providing x data and a function, throw it all into one call to ```(plt:plot ...)``` with all your settings (e.g. ```:grid "x mx"``` to set or ```:grid "unset"``` to unset) and you're off to the races. ```(plt:help :grid)``` will print gnuplot help info for grid (or any other command). ```(plt:show :grid)``` prints the current state of grid (or any other command).
 ```
