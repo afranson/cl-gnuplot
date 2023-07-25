@@ -382,12 +382,14 @@ pdfcairo size works in inches: default is 5x3 inches"
 		    ((eq (car command) :3d-data) ;; expects ((((x y z ...) (x y z ...) ...) ((x y z ...) (x y z ...) ...))) format
 		     (setf (cadr command) (remove-if-not #'identity (cadr command))) ;; remove nils
 		     "~*~{~{~{~{~,9,,,,,'eg~^ ~}~&~}~^~%~}e~&~}")
-		    ((string= (cadr command) "unset") ;; unset commands
+		    ((or (string= (cadr command) "unset") (null (cadr command))) ;; unset commands
 		     "unset ~a~&")
 		    ((string= (cadr command) "") ;; empty commands
 		     "set ~a ~a~&")
 		    ((char= (char (cadr command) 0) #\#) ;; if first char is #, treat as comment
 		     "#set ~a ~a~&")
+		    ((eq :string (car command)) ;; just give gnuplot the string straight, no set, no plot, no nothing
+		     "~*~a~&")
 		    ;; If output is not stdout, do not allow terminal operations
 		    ;; Loops until a valid command is found
 		    ((and (eq (char (symbol-name (car command)) 0) #\T)
@@ -395,11 +397,11 @@ pdfcairo size works in inches: default is 5x3 inches"
 		     (let ((output (retrieve :output)))
 		       (do ((i 0 (1+ i)))
 			   ((or (>= i 20) (string/= output "")) output)
-			 (sleep 0.025)
-			 (setf output (get-all-gnuplot-error-output nil)))
+			   (sleep 0.025)
+			   (setf output (get-all-gnuplot-error-output nil)))
 		       (if (string= (elt (split-string #\ (elt (split-string #\newline output) 1)) 4) "STDOUT")
 			   "set ~a ~a~&"
-			   "")))
+			 "")))
 		    (t
 		     "set ~a ~a~&")))
 	    commands))
@@ -489,7 +491,13 @@ Symbol: :my-symbol
 	nil
 	(multiple-value-bind (object rest)
 	    (ecase (what-is-the-next-plot-object args)
-	      (:symbol (values (make-plot-object :code (first args) :data (second args)) (cddr args)))
+	      (:symbol
+	       (let* ((is-string (eq :string (car args)))
+		      (first-word (subseq (cadr args) 0 (position #\  (cadr args))))
+		      (is-plot (if is-string (if (string-equal first-word "plot") :plot (if (string-equal first-word "splot") :plot-3d)))))
+		 (if is-plot
+		     (values (make-plot-object :code is-plot :format (subseq (cadr args) (1+ (position #\  (cadr args))))) (cddr args))
+		     (values (make-plot-object :code (first args) :data (second args)) (cddr args)))))
 	      (:string (values (make-plot-object :code string-code :format (first args)) (cdr args)))
 	      (:1d (values (make-plot-object :code :plot :data (transpose (list (first args))) :format (auto-label)) (cdr args)))
 	      (:1d-function (values (make-plot-object :code :plot :data (transpose (car args) (mapcar (cadr args) (car args))) :format (auto-label)) (cddr args)))
@@ -520,7 +528,7 @@ Symbol: :my-symbol
   (if (null args)
       (make-segregated-plot-objects :plottables plots :settings settings)
       (case (plot-object-code (car args))
-	((:plot :plot-3d :string) (segregate-plots (rest args) (append (list (first args)) plots) settings))
+	((:plot :plot-3d) (segregate-plots (rest args) (append (list (first args)) plots) settings))
 	(otherwise (segregate-plots (rest args) plots (append (list (first args)) settings))))))
 
 (defun make-sure-codes-match (seg-plot-objects)

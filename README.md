@@ -1,5 +1,10 @@
 # cl-gnuplot
 
+TODO: Add :string command explanation
+TODO: Add #command explanation
+TODO: Add null or "unset" to unset
+
+
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
 Key Features:
