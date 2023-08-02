@@ -1,7 +1,5 @@
 # cl-gnuplot
 
-TODO: Allow for entry of data as datablocks (```$DBLOCK << EOD; ...bunch of data...; EOD```), for embedding in gnuplot files (via ```(plt:save-gnuplot-script)```) in addition to currently supported '-' style.
-
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
 Key Features:
@@ -246,12 +244,15 @@ or
           :string "set xlabel 'Proof of Concept' font ',20'"
           :string "plot './resources/quick-example-file.txt' u 1:2 w lp title 'Override'"
           :string "plot 5e5*sin(x/50)+5e5"
-		  :string "f(x) = 200 * 1.16e6 / (200 + (x - 635)**2)"
+          :string "f(x) = 200 * 1.16e6 / (200 + (x - 635)**2)"
           :string "array xs[400]; do for [i=0:399] {xs[i+1] = 40.0+(960-40)/399.0*i}"
           :string "plot [i=1:400:1] '+' u (xs[i]):(f(xs[i])) w p pt 6 ps 3 title 'Eyeballing'")
 ```
 
-
 ## License
 
 GPLv3
+
+## TODO
+
+TODO: Allow for entry of data as datablocks (```$DBLOCK << EOD; ...bunch of data...; EOD```), for embedding in gnuplot files (via ```(plt:save-gnuplot-script)```) in addition to currently supported '-' style.
