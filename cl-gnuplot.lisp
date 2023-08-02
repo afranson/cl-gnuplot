@@ -176,7 +176,7 @@ I.e. (x-list-y-list-permute '(1 2) '(4 5)) => '((1 4) (1 5) (2 4) (2 5))"
 			  ((0 2 5) (1 2 0) (2 2 0))))
 
 (defun init-gnuplot (&optional (init-global-stream t))
-  "Initialize the gnuplot process and return the process streams, process class object from uiop, and the error stream. Default is to use gnuplot-qt. Can use 2>&1 to merge error and stdout streams." 
+  "Initialize the gnuplot process and return the process streams, process class object from uiop, and the error stream. Default is to use gnuplot-qt. Can use 2>&1 to merge error and stdout streams."
   (let* ((gnuplot-process (uiop:launch-program "/bin/gnuplot-qt"
 					       :output :stream
 					       :input :stream
@@ -320,7 +320,8 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
   (log "xy")
   (parametric "")
   (timefmt "")
-  (multiplot ""))
+  (multiplot "")
+  (string ""))
 
 (defun save-last-plot (&optional (terminal (or "pngcairo" "pdfcairo" "epscairo" "wxt" "epslatex" "pslatex" "cairolatex" "jpg" "png" "gif")) (filename "mytest.png"))
   "Saves what can be recalled with 'replot' function (i.e. multiplot figures will not work - see 'save-plot' macro to save multiplots).
@@ -409,7 +410,7 @@ pdfcairo size works in inches: default is 5x3 inches"
 	   (mapcar
 	    (lambda (format-string command)
 	      (format nil
-		      format-string
+		      (print format-string)
 		      (string-downcase (symbol-name (car command)))
 		      (cadr command)))
 	    format-strings commands)))

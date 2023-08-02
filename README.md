@@ -1,10 +1,5 @@
 # cl-gnuplot
 
-TODO: Add :string command explanation
-TODO: Add #command explanation
-TODO: Add null or "unset" to unset
-
-
 Interact with gnuplot via common lisp in a simple, intuitive manner. Made specifically for easy plotting of 2d and 3d data.
 
 Key Features:
@@ -187,6 +182,12 @@ Multiplot works by wrapping multiple plots inside one function call. The 'layout
 ;;; Inquiring
 (plt:help :xtics)
 (plt:show :terminal\ pngcairo)
+
+;; Command syntax
+;;     equivalent to: "set grid" "unset xtics" "unset ytics" "set yrange [0:10]"      "#set title '#foobar'" (comment)
+(plt:send-plot-options :grid "" :xtics "unset" :ytics null :string "set yrange [0:10]" :title "#'foobar'")
+;;     = to:          "set xtics 10,3,30"       "array A[100]; A[1] = 10; print A[1]"
+(plt:send-plot-options :xtics "10,3,30" :string "array A[100]; A[1] = 10; print A[1]")
 
 ;;; 2D plotting
 (plt:reset)
