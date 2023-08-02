@@ -369,12 +369,12 @@ pdfcairo size works in inches: default is 5x3 inches"
      (send-plot-options :terminal "pop")))
 
 (defun save-gnuplot-script (&optional (filename "tmp.gnu"))
-  "Save the gnuplot session."
-  (send-strings (format nil "save ~a" filename)))
+  "Save the gnuplot session. Does not save plotted data"
+  (send-strings (format nil "save ~s" filename)))
 
 (defun load-gnuplot-script (filename)
   "Load a gnuplot session from a .gnu file."
-  (send-strings (format nil "load ~a" filename)))
+  (send-strings (format nil "load ~s" filename)))
 
 (defun add-dash-to-string (string)
   (concatenate 'string "'-' " string))
