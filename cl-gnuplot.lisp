@@ -275,12 +275,30 @@ Use keyword ':gp' to specify a gnuplot instance to send the command to. If not, 
 			   ,key))))
 	      args)))
     `(progn
-       (defun send-plot-options (&key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
+       (defun send-plot-options (&rest keys &key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
 	 "Send plot options to gnuplot process WITHOUT replotting. See 'send-plot-options-and-replot' for a version that does replot with every execution."
 	 (apply #'send-command (nconc ,@(make-command-list keys-and-defaults))))
-       (defun send-plot-options-and-replot (&key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
+       (defun send-plot-options-and-replot (&rest keys &key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
 	 "Send plot options to gnuplot process and replot. See 'send-plot-options' for a version that does not replot with every execution."
 	 (apply #'send-command-and-replot (nconc ,@(make-command-list keys-and-defaults)))))))
+
+(defmacro defun-create-plot-options-function (&rest keys-and-defaults)
+  "Creates functions that modify plot options. Used so that IDE can provide helpful parameters and defaults WITHOUT actually setting the defaults upon execution. Only user supplied arguments will be send to the gnuplot process."
+  (labels ((make-arg-list (args)
+	     (mapcar
+	      (lambda (x)
+		(destructuring-bind (key default) x
+		  `(,key ,default ,(intern (concatenate 'string (symbol-name key) "-P")))))
+	      args)))
+    `(progn
+       (defun send-plot-options (&rest keys &key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
+	 "Send plot options to gnuplot process WITHOUT replotting. See 'send-plot-options-and-replot' for a version that does replot with every execution."
+	 #+sbcl (declare (sb-ext:muffle-conditions cl:style-warning))
+	 (apply #'send-command keys))
+       (defun send-plot-options-and-replot (&rest keys &key ,@(make-arg-list keys-and-defaults) &allow-other-keys)
+	 "Send plot options to gnuplot process and replot. See 'send-plot-options' for a version that does not replot with every execution."
+	 #+sbcl (declare (sb-ext:muffle-conditions cl:style-warning))
+	 (apply #'send-command-and-replot keys)))))
 
 (defun-create-plot-options-function
     (terminal "qt size 1080,1080 linewidth 3 font 'Arial,30'")
@@ -383,26 +401,26 @@ pdfcairo size works in inches: default is 5x3 inches"
 		    ((eq (car command) :3d-data) ;; expects ((((x y z ...) (x y z ...) ...) ((x y z ...) (x y z ...) ...))) format
 		     (setf (cadr command) (remove-if-not #'identity (cadr command))) ;; remove nils
 		     "~*~{~{~{~{~,9,,,,,'eg~^ ~}~&~}~^~%~}e~&~}")
+		    ((eq :string (car command)) ;; just give gnuplot the string straight, no set, no plot, no nothing
+		     "~*~a~&")
+		    ;; If output is not stdout, do not allow terminal operations
+		    ;; Loops until a valid command is found
+		    ((and (char-equal (char (symbol-name (car command)) 0) #\T)
+			  (char-equal (char (symbol-name (car command)) 1) #\E))
+		     (let ((output (retrieve :output)))
+		       (do ((i 0 (1+ i)))
+			   ((or (>= i 20) (string/= output "")) output)
+			 (sleep 0.025)
+			 (setf output (get-all-gnuplot-error-output nil)))
+		       (if (string= (elt (split-string #\ (elt (split-string #\newline output) 1)) 4) "STDOUT")
+			   "set ~a ~a~&"
+			   "")))
 		    ((or (string= (cadr command) "unset") (null (cadr command))) ;; unset commands
 		     "unset ~a~&")
 		    ((string= (cadr command) "") ;; empty commands
 		     "set ~a ~a~&")
 		    ((char= (char (cadr command) 0) #\#) ;; if first char is #, treat as comment
 		     "#set ~a ~a~&")
-		    ((eq :string (car command)) ;; just give gnuplot the string straight, no set, no plot, no nothing
-		     "~*~a~&")
-		    ;; If output is not stdout, do not allow terminal operations
-		    ;; Loops until a valid command is found
-		    ((and (eq (char (symbol-name (car command)) 0) #\T)
-			  (eq (char (symbol-name (car command)) 1) #\e))
-		     (let ((output (retrieve :output)))
-		       (do ((i 0 (1+ i)))
-			   ((or (>= i 20) (string/= output "")) output)
-			   (sleep 0.025)
-			   (setf output (get-all-gnuplot-error-output nil)))
-		       (if (string= (elt (split-string #\ (elt (split-string #\newline output) 1)) 4) "STDOUT")
-			   "set ~a ~a~&"
-			 "")))
 		    (t
 		     "set ~a ~a~&")))
 	    commands))
@@ -410,7 +428,7 @@ pdfcairo size works in inches: default is 5x3 inches"
 	   (mapcar
 	    (lambda (format-string command)
 	      (format nil
-		      (print format-string)
+		      format-string
 		      (string-downcase (symbol-name (car command)))
 		      (cadr command)))
 	    format-strings commands)))
