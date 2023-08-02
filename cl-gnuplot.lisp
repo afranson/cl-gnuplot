@@ -672,11 +672,11 @@ E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), th
 (defun multiplot (mp-options-string &rest plots-and-options)
   "First takes multiplot options as found with (plt:show :multiplot). Setting 'layout rows,cols' (yplots,xplots) can be quite useful. Then takes a list of plot arguments like for the plt:plot command, like (list '(2 3 4 5) \"w lp title \\\"test multiplot\\\"\" ...). Finally takes plot options as given with the plt:send-command function, like (list :xrange [0:4] :ylabel \"\\\"Current\\\"\" ...)
 Altogether:
-(multiplot \"layout 2,2 title \\\"Multiplot Title\\\"\"
-	     (list '(1 2 3 4) \"w lp title \\\"plot 1\\\"\" '(2 1 4 3) \"w lp title \\\"Double plot!\\\"\" :xlabel \"\\\"Amps\\\"\" :ylabel \"\\\"Pain\\\"\" :key \"top left\" :grid \"\")
-	     (list '(10 25 30) \"w lp title \\\"plot 2\\\"\" :xlabel \"\\\"Bees\\\"\")
-	     (list '(1 0 3 10) \"w lp title \\\"plot 3\\\"\" :xlabel \"\\\"Volts\\\"\" :key \"unset\")
-	     (list '(-2 -4 -6 2) \"w lp title \\\"plot 4\\\"\" :xlabel \"\\\"Dogs\\\"\" :grid \"unset\"))"
+(multiplot \"layout 2,2 title 'Multiplot Title'\"
+	     (list '(1 2 3 4) \"w lp title 'plot 1'\" '(2 1 4 3) \"w lp title 'Double plot!'\" :xlabel \"'Amps'\" :ylabel \"'Pain'\" :key \"top left\" :grid \"\")
+	     (list '(10 25 30) \"w lp title 'plot 2'\" :xlabel \"'Bees'\")
+	     (list '(1 0 3 10) \"w lp title 'plot 3'\" :xlabel \"'Volts'\" :key \"unset\")
+	     (list '(-2 -4 -6 2) \"w lp title 'plot 4'\" :xlabel \"'Dogs'\" :grid \"unset\"))"
   (unwind-protect
        (progn (send-strings (format nil "set multiplot ~a" mp-options-string))
 	      (mapcar (lambda (x) (reset) (apply #'plot x)) plots-and-options))
