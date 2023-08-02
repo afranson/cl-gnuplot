@@ -668,11 +668,6 @@ E.g. if the current order is (0 1 2 3 4 5) and 'new-order' is '(0 3 2 5 4 1), th
 
 (export '(linspace range transpose partition basic-read-file *gnuplot* *current-plots* init-gnuplot quit-gnuplot get-all-gnuplot-error-output send-strings replot reset send-strings-and-replot send-command send-command-and-replot string-code-to-2d string-code-to-3d plot plot-add rearrange-plots resend-plots plot3d plot3d-add plot3d-with-script help show retrieve help-cl-gnuplot restart-gnuplot send-plot-options send-plot-options-and-replot save-plot save-last-plot save-gnuplot-script load-gnuplot-script switch-save-all 3d-data-to-x-list-y-list-z-list x-list-y-list-z-matrix-to-3d-data ignore-ys-in-text))
 
-;; TODO heteroaxis plot
-
-;; TODO add default plot options
-;; TODO consider options first then plot second
-;; TODO why does it need to be run multiple times to work correctly - maybe MUST set terminal and such (should have a default) before set multiplot?
 ;; TODO expects you to know everything up front, no option to add multiplots afterwards via a regular plot-data command
 (defun multiplot (mp-options-string &rest plots-and-options)
   "First takes multiplot options as found with (plt:show :multiplot). Setting 'layout rows,cols' (yplots,xplots) can be quite useful. Then takes a list of plot arguments like for the plt:plot command, like (list '(2 3 4 5) \"w lp title \\\"test multiplot\\\"\" ...). Finally takes plot options as given with the plt:send-command function, like (list :xrange [0:4] :ylabel \"\\\"Current\\\"\" ...)
