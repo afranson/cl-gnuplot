@@ -92,18 +92,18 @@ For reference. Forgive the compactness.
 	;;(plt:send-plot-options :terminal "qt lw 1 font ',12' size 1920,1080")
 	(plt:string-code-to-2d)
 	(plt:multiplot "layout 3,3 title 'Specialized 2D Plots'"
-                   (list '((1 3 0 6 5) (2 5 0 5 4.5) (3 4.5 3 8 6)) "w candle title 'XMR'"
-                         :mxtics "default" :xtics "auto" :xrange "[0:4]" :boxwidth "0.2" :xlabel "'Time'" :ylabel "'$$$'" :title "'Candlestick'" :key "top left" :grid "")
-                   (list :style "histogram cluster gap 1" :style "data histogram" :style\ fill "pattern 1"
+                   (list :title "'Candlestick'" '((1 3 0 6 5) (2 5 0 5 4.5) (3 4.5 3 8 6)) "w candle title 'XMR'"
+                         :mxtics "default" :xtics "auto" :xrange "[0:4]" :boxwidth "0.2" :xlabel "'Time'" :ylabel "'$$$'" :key "top left" :grid "")
+                   (list :title "'Histogram'" :style "histogram cluster gap 1" :style "data histogram" :style\ fill "pattern 1"
                          '(4 2 9 7) "u 1 ti 'histo 1'" '(9 8 2 4) "u 1 ti 'histo 2'" '(4 4 5 5) "u 1 ti 'histo 3'"
-                         :boxwidth "1" :ylabel "'Stigs'" :xrange "[-1:4]" :yrange "[0:12]" :title "'Histogram'" :xtics "('before' 0, 'during' 1, 'after' 2, 'GT' 3)")
-                   (list '(1 0 3 10) "w lp ti 'small axis' axes x1y1" '(1000 700 200 0) "w lp ti 'large axis' axes x1y2" :xlabel "'Volts'" :ytics "nomirror" :y2tics "" :title "'Multiaxis'" :ylabel "'Current 1'" :y2label "'Current 2'" :grid "")
-                   (list :parametric "" "cosh(t),sin(t) w lp title 'cosh(t),sin(t)'" :title "'Parametric Plot'" :xlabel "'X'" :ylabel "'Y'" :grid "")
-                   (list "sample [*:1] cos(x), [1:3] 0.3*sin(x*x), [3:*] airy(-x) w lp" :title "'Piecewise'" :yrange "[-1.5:1.5]" :xlabel "'Angle'" :ylabel "'a.u.'")
-                   (list :style "boxplot outliers pt 7" '(1 2 3 4 5 6 11) "u (0):1 w boxplot notitle" '(2 4 5 6 3 11 2 4) "u (1):1 w boxplot notitle" :title "'Box Plot'" :xtics "('A' 0, 'B' 1)")
-                   (list '(1 2 2.3 2.4 2.5 2.55 2.8 3.2 4) '(5 4 4.3 4.9 3.5 4.2 5.3 4.1 4) "u 1:2:xtic(\"\"):ytic(\"\") w p ps 3 notitle" :xtics "out scale 2" :ytics "out scale 2" :xrange "[0:5]" :yrange "[3:6]" :title "'Rugplot'")
-                   (list :spiderplot "" :style "spiderplot fs transparent solid border lw 3.0" :style "data spiderplot" :for "[i=1:5] paxis i range [0:10]" :paxis "2 label offset 0.2,0.4" :paxis "5 label offset -0.2,0.4" :paxis "1 tics" :for "[i=2:5] paxis i tics format \"\""  '(\"STR\" 4 1) "title columnhead" '(\"WIS\" 9 5) "title columnhead" '(\"INT\" 1 8) "title columnhead" '(\"CHR\" 1 6) "title columnhead" '(\"STA\" 4 3) "title columnhead" :title "'Spiderplot'" :grid "")
-                   (list '((250 3 12 0.4) (275 4 5 0.1) (300 5 1 1)) "w xyerrorbars title 'That''s life'" :title "'Points with Error Bars'" :xrange "[225:325]" :yrange "[0:10]" :xlabel "'Temperature (K)'" :ylabel "'Conductivity (S/m)'")))
+                         :boxwidth "1" :ylabel "'Stigs'" :xrange "[-1:4]" :yrange "[0:12]" :xtics "('before' 0, 'during' 1, 'after' 2, 'GT' 3)")
+                   (list :title "'Multiaxis'" '(1 0 3 10) "w lp ti 'small axis' axes x1y1" '(1000 700 200 0) "w lp ti 'large axis' axes x1y2" :xlabel "'Volts'" :ytics "nomirror" :y2tics "" :ylabel "'Current 1'" :y2label "'Current 2'" :grid "")
+                   (list :title "'Parametric Plot'" :parametric "" "cosh(t),sin(t) w lp title 'cosh(t),sin(t)'" :xlabel "'X'" :ylabel "'Y'" :grid "")
+                   (list :title "'Piecewise'" "sample [*:1] cos(x), [1:3] 0.3*sin(x*x), [3:*] airy(-x) w lp" :yrange "[-1.5:1.5]" :xlabel "'Angle'" :ylabel "'a.u.'")
+                   (list :title "'Box Plot'" :style "boxplot outliers pt 7" '(1 2 3 4 5 6 11) "u (0):1 w boxplot notitle" '(2 4 5 6 3 11 2 4) "u (1):1 w boxplot notitle" :xtics "('A' 0, 'B' 1)")
+                   (list :title "'Rugplot'" '(1 2 2.3 2.4 2.5 2.55 2.8 3.2 4) '(5 4 4.3 4.9 3.5 4.2 5.3 4.1 4) "u 1:2:xtic(\"\"):ytic(\"\") w p ps 3 notitle" :xtics "out scale 2" :ytics "out scale 2" :xrange "[0:5]" :yrange "[3:6]")
+                   (list :title "'Spiderplot'" :spiderplot "" :style "spiderplot fs transparent solid border lw 3.0" :style "data spiderplot" :for "[i=1:5] paxis i range [0:10]" :paxis "2 label offset 0.2,0.4" :paxis "5 label offset -0.2,0.4" :paxis "1 tics" :for "[i=2:5] paxis i tics format \"\""  '(\"STR\" 4 1) "title columnhead" '(\"WIS\" 9 5) "title columnhead" '(\"INT\" 1 8) "title columnhead" '(\"CHR\" 1 6) "title columnhead" '(\"STA\" 4 3) "title columnhead" :grid "")
+                   (list :title "'Points with Error Bars'" '((250 3 12 0.4) (275 4 5 0.1) (300 5 1 1)) "w xyerrorbars title 'That''s life'" :xrange "[225:325]" :yrange "[0:10]" :xlabel "'Temperature (K)'" :ylabel "'Conductivity (S/m)'")))
 ```
 ![niche-2d-plotting](./resources/niche-2d.png "Specialized 2D Plotting")
 
@@ -172,7 +172,7 @@ Multiplot works by wrapping multiple plots inside one function call. The 'layout
     (plt:multiplot "layout 2,2 title 'Multiplot Title'"
                    (list '(1 2 3 4) "w lp title 'plot 1'" '(2 1 4 3) "w lp title 'Double plot!'"
                          :xlabel "'Amps'" :ylabel "'Fun'" :key "top left" :grid "")
-                   (list '(10 25 30) "w lp title 'plot 2'" :xlabel "'Bees'")
+                   (list '(10 25 30) "w lp title 'plot 2'" :xlabel "'Bees'" :key "bottom right")
                    (list '(1 0 3 10) "w lp title 'plot 3'" :xlabel "'Volts'" :key "unset")
                    (list '(-2 -4 -6 2) "w lp title 'plot 4'" :xlabel "'Dogs'" :grid "unset" :mxtics "10")))
 ```
@@ -234,8 +234,8 @@ Multiplot works by wrapping multiple plots inside one function call. The 'layout
 # Just Let Me Use Gnuplot Syntax Dangit
 ```
 (plt:send-strings (list "set terminal qt enhanced font 'arial,30' size 1920,1080"
-                        "plot './resources/quick-example-file.txt' w lp u 1:2 title 'Override'"
-                        "set xlabel 'Proof of Concept' font ',20'"))
+                        "set xlabel 'Proof of Concept' font ',20'"
+                        "plot './resources/quick-example-file.txt' u 1:2 w lp title 'Override'"))
 ```
 
 ## License
